@@ -70,6 +70,14 @@ func (channel *Channel) RemoveUser(name string) {
 	}
 }
 
-func(chat *Chat) FindUser(name string) channel string {
-	return nil
+func (chat *Chat) FindUser(name string) string {
+	for _, channel := range chat.Channels {
+		for _, user := range channel.Users {
+			if user == name {
+				return channel.Name
+			}
+		}
+	}
+
+	return ""
 }

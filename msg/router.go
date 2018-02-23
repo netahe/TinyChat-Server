@@ -9,11 +9,6 @@ import (
 func InitServer() {
 	r := mux.NewRouter()
 
-	//	chat := Chat{[]Channel{"Welcom"}}
-	//	channel := NewChannel("Welcome")
-
-	//	chat.Channels = append(chat.Channels, *channel)
-
 	chat := NewChat()
 	chat.AddChannel("Welcome")
 	chat.AddChannel("Another Channel")
@@ -62,9 +57,7 @@ func InitServer() {
 
 			if chat.FindUser(vars["user_id"]) != vars["chan_id"] {
 				// error: user already in channel
-			}
-
-			else {
+			} else {
 				chat.GetChannel(vars["chan_id"]).RemoveUser(chat.FindUser(vars["user_id"])) // remove user from current channel before adding them to new channel
 				chat.GetChannel(vars["chan_id"]).AddUser(vars["user_id"])
 			}
@@ -75,15 +68,13 @@ func InitServer() {
 		func(w http.ResponseWriter, r *http.Request) {
 			vars := mux.Vars(r)
 
-			if chat.FindUser(vars["user_id"]) == nil {
+			if chat.FindUser(vars["user_id"]) == "" {
 				// error: user is not in this channel
-			}
 
-			else if chat.FindUser(vars["user_id"]) != vars["chan_id"] {
+			} else if chat.FindUser(vars["user_id"]) != vars["chan_id"] {
 				// error: user is in another channel
-			}
 
-			else {
+			} else {
 				chat.GetChannel(vars["chan_id"]).RemoveUser(vars["user_id"])
 			}
 		}).Methods("DELETE")
