@@ -1,15 +1,16 @@
-package messanger
+package router
 
 import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
+	"github.com/netahe/TinyChat-Server/db"
 )
 
 func InitServer() {
 	r := mux.NewRouter()
 
-	chat := NewChat()
+	chat := db.NewChat()
 	chat.AddChannel("Welcome")
 	chat.AddChannel("Another Channel")
 
