@@ -1,11 +1,10 @@
 package main
 
 import(
-	"github.com/netahe/messanger/msg"
-
+	"github.com/netahe/TinyChat-Server/router"
 )
 
 func main() {
-	messanger.InitServer()
+	router.InitServer()
 
 }

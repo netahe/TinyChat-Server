@@ -2,17 +2,19 @@ package router
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
+	mux "github.com/gorilla/mux"
 	"net/http"
 	"github.com/netahe/TinyChat-Server/db"
+
 )
 
 func InitServer() {
 	r := mux.NewRouter()
+	var db db.DB = &db.Chat{}
+	db.InitChat()
 
-	chat := db.NewChat()
-	chat.AddChannel("Welcome")
-	chat.AddChannel("Another Channel")
+	db.CreateChannel("Welcome")
+	db.CreateChannel("Another Channel")
 
 	r.HandleFunc("/",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -21,46 +23,48 @@ func InitServer() {
 
 	r.HandleFunc("/channels",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, chat.ListChannels())
+			fmt.Fprint(w, db.ListChannels())
 		})
 
 	r.HandleFunc("/channels/{id}",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, chat.GetChannel(mux.Vars(r)["id"]))
+			fmt.Fprint(w, db.GetChannel(mux.Vars(r)["id"]))
 		}).Methods("GET")
 
 	r.HandleFunc("/channels/{id}",
 		func(w http.ResponseWriter, r *http.Request) {
-			chat.AddChannel(mux.Vars(r)["id"])
+			db.CreateChannel(mux.Vars(r)["id"])
 		}).Methods("POST")
 
 	r.HandleFunc("/channels/{id}/messages",
 		func(w http.ResponseWriter, r *http.Request) {
 			vars := mux.Vars(r)
-			chat.GetChannel(vars["id"]).AddMessage(r.FormValue("author"), r.FormValue("content"))
+			db.AddMessage(r.FormValue("author"), r.FormValue("content"), vars["id"])
 		}).Methods("POST")
 
 	r.HandleFunc("/channels/{id}/messages",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, chat.GetChannel(mux.Vars(r)["id"]).Messages)
+			fmt.Fprint(w, db.GetChannel(mux.Vars(r)["id"]).Messages)
 
 		}).Methods("GET")
 
 	r.HandleFunc("/channels/{id}/users",
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprint(w, chat.GetChannel(mux.Vars(r)["id"]).Users)
+			fmt.Fprint(w, db.GetChannel(mux.Vars(r)["id"]).Users)
 
 		}).Methods("GET")
 
 	r.HandleFunc("/channels/{chan_id}/users/{user_id}",
 		func(w http.ResponseWriter, r *http.Request) {
 			vars := mux.Vars(r)
+			userName := vars["user_id"]
+			fromChannel := db.FindUser(userName).Name
+			toChannel := vars["chan_id"]
 
-			if chat.FindUser(vars["user_id"]) != vars["chan_id"] {
+			if fromChannel == toChannel {
 				// error: user already in channel
 			} else {
-				chat.GetChannel(vars["chan_id"]).RemoveUser(chat.FindUser(vars["user_id"])) // remove user from current channel before adding them to new channel
-				chat.GetChannel(vars["chan_id"]).AddUser(vars["user_id"])
+				db.MoveUser(userName, fromChannel, toChannel)
 			}
 
 		}).Methods("PUT")
@@ -68,15 +72,28 @@ func InitServer() {
 	r.HandleFunc("/channels/{chan_id}/users/{user_id}",
 		func(w http.ResponseWriter, r *http.Request) {
 			vars := mux.Vars(r)
+			userName := vars["user_id"]
+			toChannel := vars["chan_id"]
 
-			if chat.FindUser(vars["user_id"]) == "" {
+			if db.FindUser(userName) != nil {
+				// error: user already in a channel
+			} else {
+				db.AddUser(userName, toChannel)
+			}
+
+		}).Methods("POST")
+
+	r.HandleFunc("/channels/{chan_id}/users/{user_id}",
+		func(w http.ResponseWriter, r *http.Request) {
+			vars := mux.Vars(r)
+			userName := vars["user_id"]
+			fromchannel := vars["chan_id"]
+
+			if db.FindUser(userName).Name != fromchannel {
 				// error: user is not in this channel
 
-			} else if chat.FindUser(vars["user_id"]) != vars["chan_id"] {
-				// error: user is in another channel
-
 			} else {
-				chat.GetChannel(vars["chan_id"]).RemoveUser(vars["user_id"])
+				db.RemoveUser(userName, fromchannel)
 			}
 		}).Methods("DELETE")
 

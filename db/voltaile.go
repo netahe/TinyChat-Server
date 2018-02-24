@@ -1,37 +1,33 @@
 package db
 
-type VoltaileMessage struct {
-	Author  string `json:"author"`
-	Content string `json:"content"`
+type Chat struct {
+	Channels []Channel
 }
 
-type VoltaileChannel struct {
-	Name     string            `json:name`
-	Messages []VoltaileMessage `json:"messages"`
-	Users    []string          `json:"users"`
+func (channel *Channel) addMessage(author string, content string) {
+	channel.Messages = append(channel.Messages, Message{author, content})
 }
 
-type VoltaileChat struct {
-	Channels []VoltaileChannel `json:"channels"`
+func (channel *Channel) addUser(userName string) {
+	channel.Users = append(channel.Users, userName)
 }
 
-func NewChannel(name string) *VoltaileChannel {
-	channel := new(VoltaileChannel)
-	channel.Name = name
-	return channel
+func (channel *Channel) removeUser(userName string) {
+	for i, v := range channel.Users {
+		if v == userName {
+			channel.Users = append(channel.Users[:i], channel.Users[i+1])
+			break
+		}
+	}
 }
 
-func NewChat() *VoltaileChat {
-	chat := new(VoltaileChat)
+func (chat *Chat) InitChat() {}
 
-	return chat
+func (chat *Chat) CreateChannel(chanName string) {
+	chat.Channels = append(chat.Channels, Channel{Name: chanName})
 }
 
-func (chat *VoltaileChat) AddChannel(name string) {
-	chat.Channels = append(chat.Channels, VoltaileChannel{Name: name})
-}
-
-func (chat *VoltaileChat) ListChannels() []string {
+func (chat *Chat) ListChannels() []string {
 	var names []string
 
 	for _, channel := range chat.Channels {
@@ -42,42 +38,40 @@ func (chat *VoltaileChat) ListChannels() []string {
 	return names
 }
 
-func (chat *VoltaileChat) GetChannel(name string) *VoltaileChannel {
+func (chat *Chat) GetChannel(chanName string) *Channel {
 	for _, channel := range chat.Channels {
-		if channel.Name == name {
+		if channel.Name == chanName {
 			return &channel
 		}
-
 	}
-
-	return nil
+	return &Channel{}
 }
 
-func (channel *VoltaileChannel) AddMessage(author string, content string) {
-	channel.Messages = append(channel.Messages, VoltaileMessage{author, content})
+func (chat *Chat) AddUser(userName string, chanName string) {
+	chat.GetChannel(chanName).addUser(userName)
 }
 
-func (channel *VoltaileChannel) AddUser(name string) {
-	channel.Users = append(channel.Users, name)
+func (chat *Chat) RemoveUser(userName string, chanName string) {
+	chat.GetChannel(chanName).removeUser(userName)
 }
 
-func (channel *VoltaileChannel) RemoveUser(name string) {
-	for i, v := range channel.Users {
-		if v == name {
-			channel.Users = append(channel.Users[:i], channel.Users[i+1])
-			break
-		}
-	}
+func (chat *Chat) MoveUser(userName string, fromChan string, toChan string) {
+	chat.GetChannel(fromChan).removeUser(userName)
+	chat.GetChannel(toChan).addUser(userName)
 }
 
-func (chat *VoltaileChat) FindUser(name string) string {
+func (chat *Chat) AddMessage(author string, content string, chanName string) {
+	chat.GetChannel(chanName).addMessage(author, content)
+}
+
+func (chat *Chat) FindUser(userName string) *Channel {
 	for _, channel := range chat.Channels {
 		for _, user := range channel.Users {
-			if user == name {
-				return channel.Name
+			if user == userName {
+				return &channel
 			}
 		}
 	}
 
-	return ""
+	return nil
 }

@@ -1,6 +1,17 @@
 package db
 
-/* database agnostic interface for db communication */
+/*database agnostic interface for db communication */
+
+type Channel struct {
+	Name     string
+	Users    []string
+	Messages []Message
+}
+
+type Message struct {
+	Author  string
+	Content string
+}
 
 type DB interface {
 	InitChat()
