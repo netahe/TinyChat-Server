@@ -33,5 +33,11 @@ func InitServer() {
 
 	r.HandleFunc("/channels/{chan_id}/users/{user_id}", DeleteUser).Methods("DELETE")
 
+	r.HandleFunc("/updater/channels", TrackChannels)
+
+	r.HandleFunc("/updater/channels/{chan_id}/messages", TrackMessages)
+
+	r.HandleFunc("/updater/channels/{chan_id}/users", TrackUsers)
+
 	http.ListenAndServe(":8000", r)
 }
