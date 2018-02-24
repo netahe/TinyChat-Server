@@ -87,13 +87,13 @@ func InitServer() {
 		func(w http.ResponseWriter, r *http.Request) {
 			vars := mux.Vars(r)
 			userName := vars["user_id"]
-			fromchannel := vars["chan_id"]
+			fromChannel := vars["chan_id"]
 
-			if db.FindUser(userName).Name != fromchannel {
+			if db.FindUser(userName).Name != fromChannel {
 				// error: user is not in this channel
 
 			} else {
-				db.RemoveUser(userName, fromchannel)
+				db.RemoveUser(userName, fromChannel)
 			}
 		}).Methods("DELETE")
 
